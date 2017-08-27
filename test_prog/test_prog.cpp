@@ -92,12 +92,12 @@ int main(int argc, char *argv[]) {
 	sub_scores.gap_open = gapo;
 	sub_scores.gap_extend = gape;
 
-	gasal_error_t err = gasal_init(&sub_scores, 0);
+	gasal_init(&sub_scores, 0);
 
 
 
-	std::ifstream batch1_fasta(argv[optind]);
-	std::ifstream batch2_fasta(argv[optind + 1]);
+	ifstream batch1_fasta(argv[optind]);
+	ifstream batch2_fasta(argv[optind + 1]);
 
 	vector<string> batch1_vec;
 	vector<string> batch2_vec;
@@ -189,14 +189,14 @@ int main(int argc, char *argv[]) {
 				misc_time.Stop();
 				thread_misc_time[omp_get_thread_num()] += misc_time.GetTime();
 				uint32_t batch2_bytes = batch_idx;
-				gasal_gpu_storage gpu_storage;
+				gasal_gpu_storage *gpu_storage = NULL;
 
 				if (al_type.compare("local") == 0){
 					if(start_pos){
-						err = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, &gpu_storage, batch1_bytes, batch2_bytes, LOCAL, WITH_START);
+						gpu_storage = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, LOCAL, WITH_START);
 					}
 					else {
-						err = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, &gpu_storage, batch1_bytes, batch2_bytes, LOCAL, WITHOUT_START);
+						gpu_storage = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, LOCAL, WITHOUT_START);
 					}
 				}
 				else if (al_type.compare("semi_global") == 0) {
@@ -230,16 +230,16 @@ int main(int argc, char *argv[]) {
 				}
 				if (al_type.compare("local") == 0){
 					if(start_pos){
-						err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
+						gasal_error_t err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
 						while (err != 0) {
 							//cerr << "I am stuck here" << endl;
-							err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
+							err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
 						}
 					} else {
-						err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
+						gasal_error_t err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
 						while (err != 0) {
 							//cerr << "I am stuck here" << endl;
-							err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
+							err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
 						}
 					}
 				}
@@ -253,8 +253,8 @@ int main(int argc, char *argv[]) {
 
 				}
 				misc_time.Start();
-#pragma omp critical
 				if(print_out) {
+#pragma omp critical
 					for (int i = curr_idx, j = 0; i < n_seqs + curr_idx; i++, j++) {
 						if(al_type.compare("local") == 0) {
 							if (start_pos){
@@ -288,14 +288,14 @@ int main(int argc, char *argv[]) {
 	string start_type[2] = {"without_start", "with_start"};
 	al_type += "_";
 	al_type += start_type[start_pos];
-	double total_misc_time = 0.0;
+	double av_misc_time = 0.0;
 //	for (int i = 0; i < n_threads; ++i){
 //		fprintf(stderr, "Thread[%d] performed  %d %s alignments in %.3f milliseconds\n", i, total_thread_n_seqs[i], al_type.c_str(), thread_aln_time[i]);
 //		total_aln_time +=  thread_aln_time[i];
 //	}
 	for (int i = 0; i < n_threads; ++i){
-			total_misc_time += thread_misc_time[i];
+			av_misc_time += (thread_misc_time[i]/n_threads);
 	}
 	fprintf(stderr, "\n-------------------------------------------------------------------------------\n");
-	fprintf(stderr, "%d threads performed %d %s alignments in %.3f milliseconds\n", n_threads, total_seqs, al_type.c_str(), total_time.GetTime() - total_misc_time);
+	fprintf(stderr, "%d threads performed %d %s alignments in %.3f milliseconds\n", n_threads, total_seqs, al_type.c_str(), total_time.GetTime() - av_misc_time);
 }

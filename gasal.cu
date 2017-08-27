@@ -80,7 +80,7 @@ inline int CudaCheckKernelLaunch()
 
 // The gasal local alignment function without start position computation
 
-gasal_error_t gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, gasal_gpu_storage *gpu_storage, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start) {
+gasal_gpu_storage* gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start) {
 
 	cudaError_t err;
 	if (n_alns <= 0) {
@@ -106,7 +106,7 @@ gasal_error_t gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, cons
 	}
 
 
-
+	gasal_gpu_storage *gpu_storage = (gasal_gpu_storage*)calloc(1, sizeof(gasal_gpu_storage));
 	cudaStream_t str;
 
 	CUDASTREAMCREATEANDDESTROYCHECK(cudaStreamCreate(&str))
@@ -198,7 +198,7 @@ gasal_error_t gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, cons
     }
 
     gpu_storage->str = str;
-    return 0;
+    return gpu_storage;
 }
 
 
@@ -248,10 +248,17 @@ gasal_error_t gasal_init(gasal_subst_scores *subst, int dev_id = 0){
 	return 0;
 }
 
+void gasal_host_malloc(void *mem_ptr, uint32_t n_bytes) {
 
+	cudaError_t err;
+	CUDAMALLOCCHECK(cudaMallocHost(&mem_ptr, n_bytes), HOST)
+}
 
+void gasal_host_free(void *mem_free_ptr) {
 
-
+	cudaError_t err;
+	CUDAMEMFREECHECK(cudaFreeHost(mem_free_ptr))
+}
 
 
 

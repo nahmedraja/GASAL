@@ -54,7 +54,7 @@ enum algo_type{
 	SEMI_GLOBAL
 };
 
-gasal_error_t gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, gasal_gpu_storage *gpu_storage, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start);
+gasal_gpu_storage* gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start);
 
 gasal_error_t gasal_get_aln_results(gasal_gpu_storage *gpu_storage, uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end);
 
