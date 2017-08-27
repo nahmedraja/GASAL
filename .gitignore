@@ -1,4 +1,7 @@
 *.o
+*.out
+*.txt
+*.tsv
 *.a
 *~
 *.cproject

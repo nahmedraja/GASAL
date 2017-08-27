@@ -46,7 +46,7 @@ class Timer
             std::cout << name << " : " <<  elapsedTime << " msec"   << std::endl;
         }
 
-        double GetTime() { return elapsedTime/1000.0;}
+        double GetTime() { return elapsedTime;}
 
 };
 

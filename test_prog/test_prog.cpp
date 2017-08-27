@@ -93,10 +93,6 @@ int main(int argc, char *argv[]) {
 	sub_scores.gap_extend = gape;
 
 	gasal_error_t err = gasal_init(&sub_scores, 0);
-	if (err < 0) {
-		cerr << "Gasal error (" << err <<")" << std::endl;
-		exit (EXIT_FAILURE);
-	}
 
 
 
@@ -129,26 +125,30 @@ int main(int argc, char *argv[]) {
 
 	int *thread_idx = (int*)malloc(n_threads*sizeof(int));
 	int *thread_n_seqs = (int*)malloc(n_threads*sizeof(int));
-	int *total_thread_n_seqs = (int*)malloc(n_threads*sizeof(int));
-	double *thread_aln_time = (double*)calloc(n_threads, sizeof(double));
+	//int *total_thread_n_seqs = (int*)calloc(n_threads, sizeof(int));
+	double *thread_misc_time = (double*)calloc(n_threads, sizeof(double));
 
-	int thread_batch_size = (int)ceil((double)BATCH_SIZE/n_threads);
+	int thread_batch_size = (int)ceil((double)BATCH_SIZE/*/n_threads*/);
 	if(thread_batch_size%128) thread_batch_size = thread_batch_size + (128 - (thread_batch_size%128));
 	int seqs_done = 0;
+	cerr << "Processing..." << endl;
 
-	 while (seqs_done < total_seqs) {
-			for (int i = 0; i < n_threads; i++){
-				if (seqs_done + thread_batch_size < total_seqs)
-					thread_n_seqs[i] = thread_batch_size;
-				else
-					thread_n_seqs[i] = total_seqs - seqs_done;
-				thread_idx[i] = seqs_done;
-				seqs_done += thread_n_seqs[i];
-			}
-			omp_set_num_threads(n_threads);
-	#pragma omp parallel
-			{
-				int n_seqs = thread_n_seqs[omp_get_thread_num()];
+	Timer total_time;
+	total_time.Start();
+	while (seqs_done < total_seqs) {
+		for (int i = 0; i < n_threads; i++){
+			if (seqs_done + thread_batch_size < total_seqs)
+				thread_n_seqs[i] = thread_batch_size;
+			else
+				thread_n_seqs[i] = total_seqs - seqs_done;
+			thread_idx[i] = seqs_done;
+			seqs_done += thread_n_seqs[i];
+		}
+		omp_set_num_threads(n_threads);
+#pragma omp parallel
+		{
+			int n_seqs = thread_n_seqs[omp_get_thread_num()];
+			if (n_seqs > 0) {
 				int curr_idx = thread_idx[omp_get_thread_num()];
 
 				vector<uint8_t> batch1(304*BATCH_SIZE);
@@ -159,6 +159,8 @@ int main(int argc, char *argv[]) {
 				vector<uint32_t> batch2_lens(n_seqs);
 
 				int batch_idx = 0;
+				Timer misc_time;
+				misc_time.Start();
 				for (int i = curr_idx, j = 0; i < n_seqs + curr_idx; i++, j++) {
 					memcpy(&(batch1[batch_idx]), batch1_vec[i].c_str(), batch1_vec[i].size());
 					batch1_offsets[j] = batch_idx;
@@ -175,7 +177,7 @@ int main(int argc, char *argv[]) {
 				batch_idx = 0;
 				for (int i = curr_idx, j = 0; i < n_seqs + curr_idx; i++, j++) {
 					memcpy(&(batch2[batch_idx]), batch2_vec[i].c_str(), batch2_vec[i].size());
-					batch1_offsets[j] = batch_idx;
+					batch2_offsets[j] = batch_idx;
 					batch_idx += batch2_vec[i].size();
 					int seq_len = batch2_vec[i].size();
 					while(batch_idx%8) {
@@ -184,25 +186,17 @@ int main(int argc, char *argv[]) {
 					batch2_lens[j] = seq_len;
 
 				}
+				misc_time.Stop();
+				thread_misc_time[omp_get_thread_num()] += misc_time.GetTime();
 				uint32_t batch2_bytes = batch_idx;
 				gasal_gpu_storage gpu_storage;
 
-				Timer cur_time;
-				cur_time.Start();
 				if (al_type.compare("local") == 0){
 					if(start_pos){
-						err = gasal_aln<LOCAL, WITH_START>(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, &gpu_storage, batch1_bytes, batch2_bytes);
-						if (err < 0) {
-							cerr << "Gasal error (" << err <<")" << endl;
-							exit (EXIT_FAILURE);
-						}
+						err = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, &gpu_storage, batch1_bytes, batch2_bytes, LOCAL, WITH_START);
 					}
 					else {
-						err = gasal_aln<LOCAL, WITHOUT_START>(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, &gpu_storage, batch1_bytes, batch2_bytes);
-						if (err < 0) {
-							cerr << "Gasal error (" << err <<")" << endl;
-							exit (EXIT_FAILURE);
-						}
+						err = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, &gpu_storage, batch1_bytes, batch2_bytes, LOCAL, WITHOUT_START);
 					}
 				}
 				else if (al_type.compare("semi_global") == 0) {
@@ -215,8 +209,8 @@ int main(int argc, char *argv[]) {
 
 				}
 
-				vector<int32_t> scores(n_seqs), batch1_start, batch2_start, batch1_end, batch2_end;
-
+				vector<int32_t> scores, batch1_start, batch2_start, batch1_end, batch2_end;
+				scores.resize(n_seqs);
 				if (al_type.compare("local") == 0){
 					batch1_end.resize(n_seqs);
 					batch2_end.resize(n_seqs);
@@ -238,19 +232,13 @@ int main(int argc, char *argv[]) {
 					if(start_pos){
 						err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
 						while (err != 0) {
-							if (err == -15) {
-								cerr << "Gasal error (" << err <<")" << std::endl;
-								exit (EXIT_FAILURE);
-							}
+							//cerr << "I am stuck here" << endl;
 							err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
 						}
 					} else {
-						err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
+						err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
 						while (err != 0) {
-							if (err == -15) {
-								cerr << "Gasal error (" << err <<")" << std::endl;
-								exit (EXIT_FAILURE);
-							}
+							//cerr << "I am stuck here" << endl;
 							err = gasal_get_aln_results(&gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
 						}
 					}
@@ -264,41 +252,50 @@ int main(int argc, char *argv[]) {
 				} else {
 
 				}
-				cur_time.Stop();
-				thread_aln_time[omp_get_thread_num()] =+ cur_time.GetTime();
-				total_thread_n_seqs[omp_get_thread_num()] =+ n_seqs;
+				misc_time.Start();
 #pragma omp critical
 				if(print_out) {
-				for (int i = curr_idx, j = 0; i < n_seqs + curr_idx; i++, j++) {
-					if(al_type.compare("local") == 0) {
-						if (start_pos){
-							fprintf(stdout, "seq_set=%s\tscore=%d\tbatch1_start=%d\tbatch2_start=%d\tbatch1_end=%d\tbatch2_end=%d\n", batch1_header[i].c_str(), scores[j], batch1_start[j],
-									batch2_start[i], batch1_end[i], batch2_end[i]);
-						}
-						else {
-							fprintf(stdout, "seq_set=%s\tscore=%d\tbatch1_end=%d\tbatch2_end=%d\n", batch1_header[i].c_str(), scores[j], batch1_end[i], batch2_end[i]);
-						}
-					} else if(al_type.compare("semi_global") == 0) {
-						if (start_pos){
+					for (int i = curr_idx, j = 0; i < n_seqs + curr_idx; i++, j++) {
+						if(al_type.compare("local") == 0) {
+							if (start_pos){
+								fprintf(stdout, "seq_set=%s\tscore=%d\tbatch1_start=%d\tbatch2_start=%d\tbatch1_end=%d\tbatch2_end=%d\n", batch1_header[i].c_str(), scores[j], batch1_start[j],
+										batch2_start[j], batch1_end[j], batch2_end[j]);
+							}
+							else {
+								fprintf(stdout, "seq_set=%s\tscore=%d\tbatch1_end=%d\tbatch2_end=%d\n", batch1_header[i].c_str(), scores[j], batch1_end[j], batch2_end[j]);
+							}
+						} else if(al_type.compare("semi_global") == 0) {
+							if (start_pos){
+
+							}
+							else {
+							}
+						}   else{
 
 						}
-						else {
-						}
-					}   else{
-
 					}
 				}
-				}
+				misc_time.Stop();
+				thread_misc_time[omp_get_thread_num()] += misc_time.GetTime();
 
 			}
+		}
 
 
-	 }
-	 double total_aln_time = 0.0;
-	 for (int i = 0; i < n_threads; ++i){
-		 fprintf(stderr, "Thread[%d] performed  %d %s alignments in %.3f milliseconds\n", i, total_thread_n_seqs[i], al_type.c_str(), thread_aln_time[i]);
-		 total_aln_time +=  thread_aln_time[i];
-	 }
-	 fprintf(stderr, "\n-------------------------------------------------------------------------------\n");
-	 fprintf(stderr, "Total time to perform  %d %s alignments in %.3f milliseconds\n", total_seqs, al_type.c_str(), total_aln_time);
+	}
+	total_time.Stop();
+	string algo = al_type;
+	string start_type[2] = {"without_start", "with_start"};
+	al_type += "_";
+	al_type += start_type[start_pos];
+	double total_misc_time = 0.0;
+//	for (int i = 0; i < n_threads; ++i){
+//		fprintf(stderr, "Thread[%d] performed  %d %s alignments in %.3f milliseconds\n", i, total_thread_n_seqs[i], al_type.c_str(), thread_aln_time[i]);
+//		total_aln_time +=  thread_aln_time[i];
+//	}
+	for (int i = 0; i < n_threads; ++i){
+			total_misc_time += thread_misc_time[i];
+	}
+	fprintf(stderr, "\n-------------------------------------------------------------------------------\n");
+	fprintf(stderr, "%d threads performed %d %s alignments in %.3f milliseconds\n", n_threads, total_seqs, al_type.c_str(), total_time.GetTime() - total_misc_time);
 }
