@@ -186,28 +186,10 @@ int main(int argc, char *argv[]) {
 					batch2_lens[j] = seq_len;
 
 				}
+				uint32_t batch2_bytes = batch_idx;
 				misc_time.Stop();
 				thread_misc_time[omp_get_thread_num()] += misc_time.GetTime();
-				uint32_t batch2_bytes = batch_idx;
-				gasal_gpu_storage *gpu_storage = NULL;
-
-				if (al_type.compare("local") == 0){
-					if(start_pos){
-						gpu_storage = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, LOCAL, WITH_START);
-					}
-					else {
-						gpu_storage = gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, LOCAL, WITHOUT_START);
-					}
-				}
-				else if (al_type.compare("semi_global") == 0) {
-					if (start_pos) {
-
-					} else {
-
-					}
-				} else {
-
-				}
+				//gasal_gpu_storage *gpu_storage = NULL;
 
 				vector<int32_t> scores, batch1_start, batch2_start, batch1_end, batch2_end;
 				scores.resize(n_seqs);
@@ -228,19 +210,13 @@ int main(int argc, char *argv[]) {
 				} else {
 
 				}
+
 				if (al_type.compare("local") == 0){
 					if(start_pos){
-						gasal_error_t err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
-						while (err != 0) {
-							//cerr << "I am stuck here" << endl;
-							err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
-						}
-					} else {
-						gasal_error_t err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
-						while (err != 0) {
-							//cerr << "I am stuck here" << endl;
-							err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
-						}
+						gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data(), LOCAL, WITH_START);
+					}
+					else {
+						gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data(), LOCAL, WITHOUT_START);
 					}
 				}
 				else if (al_type.compare("semi_global") == 0) {
@@ -252,6 +228,32 @@ int main(int argc, char *argv[]) {
 				} else {
 
 				}
+
+
+//				if (al_type.compare("local") == 0){
+//					if(start_pos){
+//						gasal_error_t err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
+//						while (err != 0) {
+//							//cerr << "I am stuck here" << endl;
+//							err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data());
+//						}
+//					} else {
+//						gasal_error_t err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
+//						while (err != 0) {
+//							//cerr << "I am stuck here" << endl;
+//							err = gasal_get_aln_results(gpu_storage, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data());
+//						}
+//					}
+//				}
+//				else if (al_type.compare("semi_global") == 0) {
+//					if (start_pos) {
+//
+//					} else {
+//
+//					}
+//				} else {
+//
+//				}
 				misc_time.Start();
 				if(print_out) {
 #pragma omp critical

@@ -1,6 +1,6 @@
-#include <iostream>
-#include <cstdint>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <cuda_runtime_api.h>
 
 #ifndef MAX_BATCH1_LEN
@@ -54,9 +54,19 @@ enum algo_type{
 	SEMI_GLOBAL
 };
 
-gasal_gpu_storage* gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-gasal_error_t gasal_get_aln_results(gasal_gpu_storage *gpu_storage, uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end);
+void gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end, int algo, int start);
+
+gasal_gpu_storage* gasal_aln_async(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start);
+
+gasal_error_t gasal_get_aln_async_results(gasal_gpu_storage *gpu_storage, uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end);
 
 gasal_error_t gasal_init(gasal_subst_scores *subst, int dev_id);
+
+#ifdef __cplusplus
+}
+#endif
 
