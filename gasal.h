@@ -64,7 +64,7 @@ gasal_gpu_storage* gasal_aln_async(const uint8_t *batch1, const uint32_t *batch1
 
 gasal_error_t gasal_get_aln_async_results(gasal_gpu_storage *gpu_storage, uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end);
 
-gasal_error_t gasal_init(gasal_subst_scores *subst, int dev_id);
+void gasal_copy_subst_scores(gasal_subst_scores *subst);
 
 #ifdef __cplusplus
 }

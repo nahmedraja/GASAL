@@ -398,17 +398,17 @@ gasal_error_t gasal_get_aln_async_results(gasal_gpu_storage *gpu_storage, uint32
 }
 
 
-gasal_error_t gasal_init(gasal_subst_scores *subst, int dev_id){
+
+void gasal_copy_subst_scores(gasal_subst_scores *subst){
 
 	cudaError_t err;
-	CUDASETDEVICECHECK(cudaSetDevice(dev_id));
 	CUDAMEMCPYTOSYMBOLCHECK(cudaMemcpyToSymbol(_cudaGapO, &(subst->gap_open), sizeof(int32_t), 0, cudaMemcpyHostToDevice));
 	CUDAMEMCPYTOSYMBOLCHECK(cudaMemcpyToSymbol(_cudaGapExtend, &(subst->gap_extend), sizeof(int32_t), 0, cudaMemcpyHostToDevice));
 	int32_t gapoe = subst->gap_open + subst->gap_extend;
 	CUDAMEMCPYTOSYMBOLCHECK(cudaMemcpyToSymbol(_cudaGapOE, &(gapoe), sizeof(int32_t), 0, cudaMemcpyHostToDevice));
 	CUDAMEMCPYTOSYMBOLCHECK(cudaMemcpyToSymbol(_cudaMatchScore, &(subst->match), sizeof(int32_t), 0, cudaMemcpyHostToDevice));
 	CUDAMEMCPYTOSYMBOLCHECK(cudaMemcpyToSymbol(_cudaMismatchScore, &(subst->mismatch), sizeof(int32_t), 0, cudaMemcpyHostToDevice));
-	return 0;
+	return;
 }
 
 void gasal_host_malloc(void *mem_ptr, uint32_t n_bytes) {
