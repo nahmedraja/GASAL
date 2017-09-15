@@ -58,14 +58,27 @@ WITH_START
 ```
 
 
-The result of alignments are stored in `host_\*` arrays. In cases where one or more results are not required, pass `NULL` as the parameter. Note that `n_alns = |batch1_offsets| = |batch2_offsets| = |batch1_lens| = |batch2_lens| = |host_\*|`.
+The result of alignments are stored in `host_*` arrays. In cases where one or more results are not required, pass `NULL` as the parameter. Note that `n_alns = |batch1_offsets| = |batch2_offsets| = |batch1_lens| = |batch2_lens| = |host_*|`.
 
 
-The `void gasal_aln()` function returns only after the alignment on the GPU is finished and `host_\*` arrays contain valid result of the alignment. In contrast, the `gasal_aln_async()` function immediately returns control to the CPU after launching the alignment kernel on the GPU. This allows the user thread to do other useful work instead of waiting for the alignment kernel to finish. The *async* function returns the pointer to `gasal_gpu_strorage` struct. To test whether the alignment on GPU is finished and the  `host_\*` arrays contain valid results, a call to the following function is required to be made:
+The `void gasal_aln()` function returns only after the alignment on the GPU is finished and `host_*` arrays contain valid result of the alignment. In contrast, the `gasal_aln_async()` function immediately returns control to the CPU after launching the alignment kernel on the GPU. This allows the user thread to do other useful work instead of waiting for the alignment kernel to finish. The *async* function returns the pointer to `gasal_gpu_strorage` struct. To test whether the alignment on GPU is finished and the  `host_*` arrays contain valid results, a call to the following function is required to be made:
 
 ```
 gasal_error_t is_gasal_aln_async_done(gasal_gpu_storage *gpu_storage);
 ```
-If the function returns `0` the alignment on the GPU is finished and the  `host_\*` arrays contain valid results.
+If the function returns `0` the alignment on the GPU is finished and the  `host_*` arrays contain valid results.
+
+Although, the CPU mememory for all the arrays can be allocated using C/C++ standard library functions, but for better performance the GASAL CPU memory function should be used:
+
+```
+void gasal_host_malloc(void *mem_ptr, uint32_t n_bytes);
+```
+If memory is allocated using above function it must be freed using:
+
+```
+void gasal_host_free(void *mem_ptr);
+```
+
+
 
 
