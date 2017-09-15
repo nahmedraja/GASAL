@@ -68,7 +68,7 @@ gasal_error_t is_gasal_aln_async_done(gasal_gpu_storage *gpu_storage);
 ```
 If the function returns `0` the alignment on the GPU is finished and the  `host_*` arrays contain valid results.
 
-Although, the CPU mememory for all the arrays can be allocated using C/C++ standard library functions, but for better performance the GASAL CPU memory function should be used:
+Although, the CPU mememory for all the arrays can be allocated using C/C++ standard library functions, but for better performance the GASAL CPU memory allocation function should be used:
 
 ```
 void gasal_host_malloc(void *mem_ptr, uint32_t n_bytes);
