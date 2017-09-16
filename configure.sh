@@ -13,7 +13,7 @@ fi
 cuda_nvcc_path=$cuda_path/bin/nvcc
 
 if [ -f $cuda_nvcc_path ]; then
- echo "NVCC found ($(command -v nvcc))"
+ echo "NVCC found ($cuda_nvcc_path)"
 else
   echo "NVCC not found"
   echo "Configuration incomplete"
@@ -46,9 +46,17 @@ else
 fi
 
 
+echo "Configuring Makefile_unconfig..."
+
+sed  "s,nvcc,$cuda_nvcc_path," Makefile_unconfig  > Makefile
+
 echo "Configuring gasal_unconfig.h..."
 
-sed  "s,/usr/local/cuda/include/cuda_runtime.h,$cuda_runtime_file," gasal.h  > gasal_mod.h
+sed  "s,/usr/local/cuda/include/cuda_runtime.h,$cuda_runtime_file," ./src/gasal_unconfig.h  > ./src/gasal.h
+
+mkdir -p ./include
+
+cp ./src/gasal.h ./include
 
 echo "Done"
 
