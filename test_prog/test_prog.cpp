@@ -213,10 +213,10 @@ int main(int argc, char *argv[]) {
 
 				if (al_type.compare("local") == 0){
 					if(start_pos){
-						gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data(), LOCAL, WITH_START);
+						gasal_aln(batch1.data(), batch1_offsets.data(), batch1_lens.data(), batch2.data(), batch2_offsets.data(), batch2_lens.data(), batch1_bytes, batch2_bytes, n_seqs, scores.data(), batch1_start.data(), batch2_start.data(), batch1_end.data(), batch2_end.data(), LOCAL, WITH_START);
 					}
 					else {
-						gasal_aln(batch1.data(), batch1_lens.data(), batch1_offsets.data(), batch2.data(), batch2_lens.data(), batch2_offsets.data(), n_seqs, batch1_bytes, batch2_bytes, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data(), LOCAL, WITHOUT_START);
+						gasal_aln(batch1.data(), batch1_offsets.data(), batch1_lens.data(), batch2.data(), batch2_offsets.data(), batch2_lens.data(), batch1_bytes, batch2_bytes, n_seqs, scores.data(), NULL, NULL, batch1_end.data(), batch2_end.data(), LOCAL, WITHOUT_START);
 					}
 				}
 				else if (al_type.compare("semi_global") == 0) {

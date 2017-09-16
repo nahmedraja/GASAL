@@ -99,7 +99,7 @@ inline int CudaCheckKernelLaunch()
 
 
 
-void gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end, int algo, int start) {
+void gasal_aln(const uint8_t *batch1, const uint32_t *batch1_offsets, const uint32_t *batch1_lens, const uint8_t *batch2, const uint32_t *batch2_offsets, const uint32_t *batch2_lens, const uint32_t batch1_bytes, const uint32_t batch2_bytes, const uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end, int algo, int start) {
 
 	cudaError_t err;
 	if (n_alns <= 0) {
@@ -242,7 +242,7 @@ void gasal_aln(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_
     return;
 }
 
-gasal_gpu_storage* gasal_aln_async(const uint8_t *batch1, const uint32_t *batch1_lens, const uint32_t *batch1_offsets, const uint8_t *batch2, const uint32_t *batch2_lens, const uint32_t *batch2_offsets,  const uint32_t n_alns, const uint32_t batch1_bytes, const uint32_t batch2_bytes, int algo, int start) {
+gasal_gpu_storage* gasal_aln_async(const uint8_t *batch1, const uint32_t *batch1_offsets, const uint32_t *batch1_lens, const uint8_t *batch2, const uint32_t *batch2_offsets, const uint32_t *batch2_lens,   const uint32_t batch1_bytes, const uint32_t batch2_bytes, const uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end,  int algo, int start) {
 
 	cudaError_t err;
 	if (n_alns <= 0) {
@@ -359,24 +359,24 @@ gasal_gpu_storage* gasal_aln_async(const uint8_t *batch1, const uint32_t *batch1
     	exit(EXIT_FAILURE);
     }
 
+    if (host_aln_score != NULL && gpu_storage->aln_score != NULL) CUDAMEMCPYCHECK(cudaMemcpyAsync(host_aln_score, gpu_storage->aln_score, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost, str), HOST);
+    else {
+    	fprintf(stderr, "The *host_aln_score input can't be NULL\n");
+    	exit(EXIT_FAILURE);
+    }
+    if (host_batch1_start != NULL && gpu_storage->batch1_start != NULL) CUDAMEMCPYCHECK(cudaMemcpyAsync(host_batch1_start, gpu_storage->batch1_start, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost, str), HOST);
+    if (host_batch2_start != NULL && gpu_storage->batch2_start != NULL) CUDAMEMCPYCHECK(cudaMemcpyAsync(host_batch2_start, gpu_storage->batch2_start, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost, str), HOST);
+    if (host_batch1_end != NULL && gpu_storage->batch1_end != NULL) CUDAMEMCPYCHECK(cudaMemcpyAsync(host_batch1_end, gpu_storage->batch1_end, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost, str), HOST);
+    if (host_batch2_end != NULL && gpu_storage->batch2_end != NULL) CUDAMEMCPYCHECK(cudaMemcpyAsync(host_batch2_end, gpu_storage->batch2_end, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost, str), HOST);
+
     gpu_storage->str = str;
     return gpu_storage;
 }
 
-gasal_error_t gasal_get_aln_async_results(gasal_gpu_storage *gpu_storage, uint32_t n_alns, int32_t *host_aln_score, int32_t *host_batch1_start, int32_t *host_batch2_start, int32_t *host_batch1_end, int32_t *host_batch2_end) {
+gasal_error_t gasal_is_aln_async_done(gasal_gpu_storage *gpu_storage) {
 
 	cudaError_t err;
 	CUDASTREAMQUERYCHECK(cudaStreamQuery(gpu_storage->str));
-
-	if (host_aln_score != NULL && gpu_storage->aln_score != NULL) CUDAMEMCPYCHECK(cudaMemcpy(host_aln_score, gpu_storage->aln_score, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost), HOST);
-	else {
-		fprintf(stderr, "The *host_aln_score input can't be NULL\n");
-		exit(EXIT_FAILURE);
-	}
-	if (host_batch1_start != NULL && gpu_storage->batch1_start != NULL) CUDAMEMCPYCHECK(cudaMemcpy(host_batch1_start, gpu_storage->batch1_start, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost), HOST);
-	if (host_batch2_start != NULL && gpu_storage->batch2_start != NULL) CUDAMEMCPYCHECK(cudaMemcpy(host_batch2_start, gpu_storage->batch2_start, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost), HOST);
-	if (host_batch1_end != NULL && gpu_storage->batch1_end != NULL) CUDAMEMCPYCHECK(cudaMemcpy(host_batch1_end, gpu_storage->batch1_end, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost), HOST);
-	if (host_batch2_end != NULL && gpu_storage->batch2_end != NULL) CUDAMEMCPYCHECK(cudaMemcpy(host_batch2_end, gpu_storage->batch2_end, n_alns * sizeof(int32_t), cudaMemcpyDeviceToHost), HOST);
 
 	if (gpu_storage->unpacked1 != NULL) CUDAMEMFREECHECK(cudaFree(gpu_storage->unpacked1));
 	if (gpu_storage->unpacked2 != NULL) CUDAMEMFREECHECK(cudaFree(gpu_storage->unpacked2));
@@ -392,8 +392,13 @@ gasal_error_t gasal_get_aln_async_results(gasal_gpu_storage *gpu_storage, uint32
 	if (gpu_storage->batch1_end != NULL) CUDAMEMFREECHECK(cudaFree(gpu_storage->batch1_end));
 	if (gpu_storage->batch2_end != NULL) CUDAMEMFREECHECK(cudaFree(gpu_storage->batch2_end));
 
-	CUDASTREAMCREATEANDDESTROYCHECK(cudaStreamDestroy(gpu_storage->str));
 
+	CUDASTREAMCREATEANDDESTROYCHECK(cudaStreamDestroy(gpu_storage->str));
+	if (gpu_storage != NULL) free(gpu_storage);
+	else {
+		fprintf(stderr, "Pointer to gasal_gpu_storage can't be NULL\n");
+		exit(EXIT_FAILURE);
+	}
 	return 0;
 }
 
