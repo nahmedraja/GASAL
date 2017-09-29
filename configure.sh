@@ -46,17 +46,13 @@ else
 fi
 
 
-echo "Configuring Makefile_unconfig..."
+echo "Configuring Makefile..."
 
-sed  "s,nvcc,$cuda_nvcc_path," Makefile_unconfig  > Makefile
+sed  -i "s,NVCC=.*,NVCC=$cuda_nvcc_path,g" Makefile 
 
-echo "Configuring gasal_unconfig.h..."
+echo "Configuring gasal.h..."
 
-sed  "s,/usr/local/cuda/include/cuda_runtime.h,$cuda_runtime_file," ./src/gasal_unconfig.h  > ./src/gasal.h
-
-mkdir -p ./include
-
-cp ./src/gasal.h ./include
+sed  -i "s,/usr/local/cuda/include/cuda_runtime.h,$cuda_runtime_file," ./src/gasal.h
 
 echo "Done"
 
