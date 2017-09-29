@@ -52,7 +52,7 @@ sed  -i "s,NVCC=.*,NVCC=$cuda_nvcc_path,g" Makefile
 
 echo "Configuring gasal.h..."
 
-sed  -i "s,/usr/local/cuda/include/cuda_runtime.h,$cuda_runtime_file," ./src/gasal.h
+sed  -i "s,.*cuda_runtime\.h\",\#include \"$cuda_runtime_file\",g" ./src/gasal.h
 
 echo "Done"
 
