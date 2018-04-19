@@ -6,3 +6,9 @@
 *~
 *.cproject
 *.project
+*.sam
+*.fa
+*.fasta
+*.bam
+lib/*
+include/*

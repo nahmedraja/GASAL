@@ -60,15 +60,7 @@ int main(int argc, char *argv[]) {
 
 		}
 	}
-	if (al_type.empty()) {
-		fprintf(stderr, "Must specify the alignment type (local, semi_global)\n");
-		return 1;
 
-	}
-	if ( al_type.compare("local") != 0 && al_type.compare("semi_global") != 0 && al_type.compare("global") != 0) {
-		fprintf(stderr, "Unknown alignment type. Must be either \"local\" or \"semi_global\" or \"global\")\n");
-		return 1;
-	}
 	if (optind + 2 > argc) {
 		fprintf(stderr, "Usage: ksw [-a] [-b] [-q] [-r] [-t] [-o] [-g] <batch1.fasta> <batch2.fasta>\n");
 		fprintf(stderr, "Options: -a INT    match score [%d]\n", sa);
@@ -84,6 +76,15 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "\n");
 		return 1;
 	}
+	if (al_type.empty()) {
+		fprintf(stderr, "Must specify the alignment type (local, semi_global)\n");
+		return 1;
+
+	}
+	if ( al_type.compare("local") != 0 && al_type.compare("semi_global") != 0 && al_type.compare("global") != 0) {
+		fprintf(stderr, "Unknown alignment type. Must be either \"local\" or \"semi_global\" or \"global\")\n");
+		return 1;
+	}
 
 	gasal_subst_scores sub_scores;
 
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 	sub_scores.gap_open = gapo;
 	sub_scores.gap_extend = gape;
 
-	gasal_init(&sub_scores, 0);
+	gasal_copy_subst_scores(&sub_scores);
 
 
 
@@ -202,13 +203,10 @@ int main(int argc, char *argv[]) {
 					}
 				}
 				else if (al_type.compare("semi_global") == 0) {
+					batch2_end.resize(n_seqs);
 					if (start_pos) {
-
-					} else {
-
+						batch2_start.resize(n_seqs);
 					}
-				} else {
-
 				}
 
 				if (al_type.compare("local") == 0){
@@ -222,10 +220,13 @@ int main(int argc, char *argv[]) {
 				else if (al_type.compare("semi_global") == 0) {
 					if (start_pos) {
 
+
 					} else {
+						gasal_aln(batch1.data(), batch1_offsets.data(), batch1_lens.data(), batch2.data(), batch2_offsets.data(), batch2_lens.data(), batch1_bytes, batch2_bytes, n_seqs, scores.data(), NULL, NULL, NULL, batch2_end.data(), SEMI_GLOBAL, WITHOUT_START);
 
 					}
 				} else {
+					    gasal_aln(batch1.data(), batch1_offsets.data(), batch1_lens.data(), batch2.data(), batch2_offsets.data(), batch2_lens.data(), batch1_bytes, batch2_bytes, n_seqs, scores.data(), NULL, NULL, NULL, batch2_end.data(), SEMI_GLOBAL, WITHOUT_START);
 
 				}
 
@@ -268,12 +269,14 @@ int main(int argc, char *argv[]) {
 							}
 						} else if(al_type.compare("semi_global") == 0) {
 							if (start_pos){
+								fprintf(stdout, "seq_set=%s\tscore=%d\tbatch2_start=%d\tbatch2_end=%d\n", batch1_header[i].c_str(), scores[j], batch2_start[j], batch2_end[j]);
 
 							}
 							else {
+								fprintf(stdout, "seq_set=%s\tscore=%d\tbatch2_end=%d\n", batch1_header[i].c_str(), scores[j],batch2_end[j]);
 							}
 						}   else{
-
+								fprintf(stdout, "seq_set=%s\tscore=%d\n", batch1_header[i].c_str(), scores[j]);
 						}
 					}
 				}
