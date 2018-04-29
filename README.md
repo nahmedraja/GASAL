@@ -1,6 +1,6 @@
 # GASAL: A GPU Accelerated Sequnce Alignment Library for High-throughput NGS DATA
 
-GASAL2 is an easy to use CUDA library for DNA/RNA sequence alignment algorithms. Currently it the following sequence alignment functions.
+GASAL is an easy to use CUDA library for DNA/RNA sequence alignment algorithms. Currently it the following sequence alignment functions.
 - Local alignment without start position computation. Gives alignment score and end position of the alignment.
 - Local alignment with start position computation. Gives alignment score and end and start position of the alignment.
 - Semi-global alignment without start position computation. Gives score and end position of the alignment.
@@ -18,7 +18,7 @@ $ ./configure.sh <path to cuda installation directory>
 $ make GPU_SM_ARCH=<GPU SM architecture> MAX_LEN=<maximum sequence length> N_CODE=<code for "N", e.g. 0x4E if the bases are represented by ASCII characters> [N_PENALTY=<penalty for aligning "N" against any other base>]
 ```
 
-`N_PENALTY` is optional and if it is not specified then GASAL2 considers "N" as an ordinary base having the same match/mismatch scores as for A, C, G or T. As a result of these commands, *include* and *lib* directories will be created containing `gasal.h` and `libgasal.a`, respectively. Include `gasal.h` in your code. Link `libgasal.a` with your code. Also link the CUDA runtime library by adding `-lcudart` flag. The path to the CUDA runtime library must also be specfied while linking as *-L <path to CUDA lib64 directory>*. In default CUDA installation on Linux machines the path is */usr/local/cuda/lib64*.
+`N_PENALTY` is optional and if it is not specified then GASAL considers "N" as an ordinary base having the same match/mismatch scores as for A, C, G or T. As a result of these commands, *include* and *lib* directories will be created containing `gasal.h` and `libgasal.a`, respectively. Include `gasal.h` in your code. Link `libgasal.a` with your code. Also link the CUDA runtime library by adding `-lcudart` flag. The path to the CUDA runtime library must also be specfied while linking as *-L <path to CUDA lib64 directory>*. In default CUDA installation on Linux machines the path is */usr/local/cuda/lib64*.
 
 ## Using GASAL
 To use GASAL  alignment functions, first the match/mismatach scores and gap open/extension penalties need to be passed on to the GPU. Assign the values match/mismatach scores and gap open/extension penalties to the members of `gasal_subst_scores` struct
