@@ -56,6 +56,10 @@ echo "Configuring gasal.h..."
 
 sed  -i "s,.*cuda_runtime\.h\",\#include \"$cuda_runtime_file\",g" ./src/gasal.h
 
+echo "Configuring Makefile of test program..."
+
+sed  -i "s,CUDA_LD_LIBRARY=.*,CUDA_LD_LIBRARY=$cuda_lib_path,g" ./test_prog/Makefile 
+
 #mkdir -p include
 
 #cp ./src/gasal.h ./include

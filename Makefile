@@ -1,6 +1,7 @@
 GPU_SM_ARCH=
 MAX_LEN=
-N_SCORE=
+N_CODE=
+N_PENALTY=
 GPU_COMPUTE_ARCH=$(subst sm,compute,$(GPU_SM_ARCH))
 NVCC=/usr/local/cuda-8.0/bin/nvcc
 SRC_DIR=./src/
@@ -22,15 +23,19 @@ error2:
 	@echo "Must specify maximum sequence length"
 endif
 
+ifeq ($(N_CODE),)
+error3:
+	@echo "Must specify the code for 'N'"
+endif
 #ifneq ($(GPU_SM_ARCH),clean)
 
 .SUFFIXES: .cu .c .o .cc .cpp
-ifeq ($(N_SCORE),)
+ifeq ($(N_PENALTY),)
 .cu.o:
-	$(NVCC) -c -g -O3 -Xcompiler -Wall,-DMAX_SEQ_LEN=$(MAX_LEN) -Xptxas -Werror  --gpu-architecture=$(GPU_COMPUTE_ARCH) --gpu-code=$(GPU_SM_ARCH) -lineinfo --ptxas-options=-v --default-stream per-thread $< -o $(OBJ_DIR)$@
+	$(NVCC) -c -g -O3 -Xcompiler -Wall -Xptxas -Werror  --gpu-architecture=$(GPU_COMPUTE_ARCH) --gpu-code=$(GPU_SM_ARCH) -lineinfo --ptxas-options=-v --default-stream per-thread $< -o $(OBJ_DIR)$@
 else
 .cu.o:
-	$(NVCC) -c -g -O3 -Xcompiler -Wall,-DMAX_SEQ_LEN=$(MAX_LEN),-DN_SCORE=$(N_SCORE) -Xptxas -Werror  --gpu-architecture=$(GPU_COMPUTE_ARCH) --gpu-code=$(GPU_SM_ARCH) -lineinfo --ptxas-options=-v --default-stream per-thread $< -o $(OBJ_DIR)$@
+	$(NVCC) -c -g -O3 -Xcompiler -Wall,-DN_PENALTY=$(N_PENALTY) -Xptxas -Werror  --gpu-architecture=$(GPU_COMPUTE_ARCH) --gpu-code=$(GPU_SM_ARCH) -lineinfo --ptxas-options=-v --default-stream per-thread $< -o $(OBJ_DIR)$@
 endif
 all: makedir libgasal.a
 
@@ -38,9 +43,11 @@ makedir:
 	mkdir -p $(OBJ_DIR)
 	mkdir -p $(LIB_DIR)
 	mkdir -p $(INCLUDE_DIR)
+	sed  -i "s,\#define MAX_SEQ_LEN.*,\#define MAX_SEQ_LEN $(MAX_LEN),g" ./src/gasal.h
+	sed  -i "s,\#define N_CODE.*,\#define N_CODE $(N_CODE),g" ./src/gasal.h
 	cp $(SRC_DIR)/gasal.h $(INCLUDE_DIR) 
 	 
-ifeq ($(N_SCORE),)
+ifeq ($(N_PENALTY),)
 libgasal.a: $(LOBJS)
 	ar -csru $(LIB_DIR)$@ $(LOBJS_PATH)
 	@echo ""
