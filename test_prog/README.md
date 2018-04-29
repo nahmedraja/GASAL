@@ -1,4 +1,4 @@
-This directory conatins a test program for GASAL. First compile GASAL. To complie the test program run `make`. Running the test program without any options will print the options:
+This directory conatins a test program for GASAL. First compile GASAL with `N_CODE=0x4E`. To complie the test program run `make`. Running the test program without any options will print the options:
 ```
 $./test_prog.out
 
