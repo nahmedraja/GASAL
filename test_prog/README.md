@@ -2,7 +2,7 @@ This directory conatins a test program for GASAL. First compile GASAL with `N_CO
 ```
 $./test_prog.out
 
-Usage: ./test_prog.out [-a] [-b] [-q] [-r] [-s] [-p] [-n] [-y] <batch1.fasta> <batch2.fasta>
+Usage: ./test_prog.out [-a] [-b] [-q] [-r] [-s] [-p] [-n] [-y] <query_batch.fasta> <target_batch.fasta>
 Options: -a INT    match score [1]
          -b INT    mismatch penalty [4]
          -q INT    gap open penalty [6]
@@ -15,4 +15,4 @@ Options: -a INT    match score [1]
 
 ````
 
-`batch1.fasta` and `batch2.fasta` contain the sequences for the alignment. The sequiences in these files are aligned one-to-one, i.e. the first sequence in batch1.fasta is aligned to the first sequence in batch2.fasta, the second sequence in batch1.fasta is aligned to the second sequence in batch2.fasta, and so on. The directory also conatins sample batch1.fasta and batch2.fasta
+`query_batch.fasta` and `target_batch.fasta` contain the sequences for the alignment. The sequiences in these files are aligned one-to-one, i.e. the first sequence in query_batch.fasta is aligned to the first sequence in target_batch.fasta, the second sequence in query_batch.fasta is aligned to the second sequence in target_batch.fasta, and so on. The directory also conatins sample query_batch.fasta and target_batch.fasta
