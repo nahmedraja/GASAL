@@ -100,7 +100,7 @@ void gasal_aln(gasal_gpu_storage_t *gpu_storage, const uint8_t *query_batch, con
 	}
 
 	if (gpu_storage->max_n_alns < actual_n_alns) {
-		fprintf(stderr, "[GASAL] max_n_alns should >= acutal_n_alns(%d)\n", gpu_storage->max_n_alns, actual_n_alns);
+		fprintf(stderr, "[GASAL] max_n_alns(%d) should be >= acutal_n_alns(%d)\n", gpu_storage->max_n_alns, actual_n_alns);
 
 		int i = 2;
 		while ( (gpu_storage->max_n_alns * i) < actual_n_alns) i++;

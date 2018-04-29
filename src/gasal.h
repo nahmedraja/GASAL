@@ -8,8 +8,7 @@
 
 
 
-#define MAX_SEQ_LEN 400
-#define N_CODE 0x4E
+
 
 
 enum comp_start{
