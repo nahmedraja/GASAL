@@ -74,3 +74,6 @@ void gasal_aln(gasal_gpu_storage_t *gpu_storage, const uint8_t *query_batch, con
 ```
 
 where `query_batch` and `target_batch` conatin the sequences. `query_batch_offsets` and `target_batch_offsets` contain the starting point of sequences in the batch that are required to be aligned. These offset values include the pad bases, and hence always multiple of 8. `query_batch_lens` and `target_batch_lens` are the original length of sequences i.e. excluding pad bases. The `actual_query_batch_bytes` and `actual_target_batch_bytes` specify the size of the two batches (in bytes) including the pad bases. `actual_n_alns` is the number of alignments to be performed. The result of the alignment is in `host_*` arrays. The user allocates/de-allocates the memory for `host_*` arrays on the CPU. A `NULL` is passed for unused result arrays. From the performance prespective, if the average lengths of the sequences in *query_batch* and *target_batch* are not same, then the shorter sequences should be placed in *query_batch*. Forexample, in case of read mappers the read sequences are conatined in query_batch and the genome sequences in target_batch.
+
+## Example
+The `test_prog` directory conatins an example program which uses GASAL for sequence alignment on GPU. See the README in the directory for the instructions about running the program. 
