@@ -79,4 +79,4 @@ where `query_batch` and `target_batch` conatin the sequences. `query_batch_offse
 The `test_prog` directory conatins an example program which uses GASAL for sequence alignment on GPU. See the README in the directory for the instructions about running the program.
 
 ## Problems and suggestions
-For any issues or suugestion contact Nauman Ahmed (n.ahmed@tudelft.nl)
+For any issues and suugestions contact Nauman Ahmed (n.ahmed@tudelft.nl)
