@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 			int j = 0;
 			//-----------Fill batches with sequences. Pick GPU_BATCH_SIZE number of sequences each time to align on the GPU-----------------------
 			for (int i = curr_idx; seqs_done < n_seqs && j < GPU_BATCH_SIZE; i++, j++, seqs_done++) {
-				memcpy(&(query_batch[query_batch_idx]), query_seqs[i].c_str(), target_seqs[i].size());
+				memcpy(&(query_batch[query_batch_idx]), query_seqs[i].c_str(), query_seqs[i].size());
 				memcpy(&(target_batch[target_batch_idx]), target_seqs[i].c_str(),  target_seqs[i].size());
 				query_batch_offsets[j] = query_batch_idx;
 				target_batch_offsets[j] = target_batch_idx;
@@ -276,6 +276,7 @@ int main(int argc, char *argv[]) {
 	for (z = 0; z < n_threads; z++) {//release GPU memory
 		gasal_gpu_mem_free(&gpu_storage_arr[z]);;
 	}
+	free(gpu_storage_arr);
 	total_time.Stop();
 	string algo = al_type;
 	string start_type[2] = {"without_start", "with_start"};
