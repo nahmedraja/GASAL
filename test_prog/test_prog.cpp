@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
 			Timer misc_time;
 			misc_time.Start();
 			int j = 0;
-			//-----------Fill batches with sequences. Pick GPU_BATCH_SIZE number of sequences each time to align on the GPU-----------------------
+			//-----------Create a batch of sequences to be aligned on the GPU. The batch contains GPU_BATCH_SIZE number of sequences-----------------------
 			for (int i = curr_idx; seqs_done < n_seqs && j < GPU_BATCH_SIZE; i++, j++, seqs_done++) {
 				memcpy(&(query_batch[query_batch_idx]), query_seqs[i].c_str(), query_seqs[i].size());
 				memcpy(&(target_batch[target_batch_idx]), target_seqs[i].c_str(),  target_seqs[i].size());
