@@ -1,4 +1,4 @@
-# GASAL: A GPU Accelerated Sequnce Alignment Library for High-throughput NGS DATA
+# GASAL: A GPU Accelerated Sequnce Alignment Library for High-throughput NGS Data
 
 GASAL is an easy to use CUDA library for DNA/RNA sequence alignment algorithms. Currently it the following sequence alignment functions.
 - Local alignment without start position computation. Gives alignment score and end position of the alignment.
