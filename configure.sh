@@ -36,7 +36,10 @@ else
   exit 1	
 fi
 
-cuda_runtime_file="${cuda_path}/targets/x86_64-linux/include/cuda_runtime.h"
+
+cuda_runtime_file="$(find -L ${cuda_path} -name cuda_runtime.h | head -n 1)"
+
+#cuda_runtime_file="${cuda_path}/targets/x86_64-linux/include/cuda_runtime.h"
 
 if [ -f $cuda_runtime_file ]; then
  echo  "CUDA runtime header file found (${cuda_runtime_file})"

@@ -1,5 +1,5 @@
 
-CUDA_LD_LIBRARY=/usr/local/cuda-9.2/targets/x86_64-linux/lib
+CUDA_LD_LIBRARY=/usr/local/cuda/targets/x86_64-linux/lib
 MAX_SEQ_LEN=600
 
 .cpp.o:
