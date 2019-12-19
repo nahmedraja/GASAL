@@ -80,5 +80,9 @@ where `query_batch` and `target_batch` conatin the sequences. `query_batch_offse
 ## Example
 The `test_prog` directory conatins an example program which uses GASAL for sequence alignment on GPU. See the README in the directory for the instructions about running the program.
 
+## Citing GASAL
+GASAL is published in BIBM conference:
+N. Ahmed, H. Mushtaq, K. Bertels and Z. Al-Ars, __GPU accelerated API for alignment of genomics sequencing data__, _2017 IEEE International Conference on Bioinformatics and Biomedicine (BIBM)_, 2017, pp. 510-515. doi: [10.1109/BIBM.2017.8217699](https://dx.doi.org/10.1109/BIBM.2017.8217699).
+
 ## Problems and suggestions
 For any issues and suugestions contact Nauman Ahmed (n.ahmed@tudelft.nl)
